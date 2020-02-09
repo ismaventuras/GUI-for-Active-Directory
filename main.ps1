@@ -11,8 +11,6 @@ function RegisterAction {
 }
 
 function UnlockUser {
-    param ( $userName
-    )
     if($userListComboBox.selectedindex -ne -1){
     Enable-ADAccount $userListComboBox.selecteditem
     $outString = 'Account has been unlocked for {0}' -f $userListComboBox.selecteditem
@@ -65,6 +63,18 @@ function OpenExplorer{
         [System.Windows.MessageBox]::Show('No user selected.')
     }
 }
+function StartSCCMRemote{
+    if($computerListComboBox.selectedindex -ne -1){
+        $path = ".\SCCM\CmRc.exe {0}" -f $computerListComboBox.SelectedValue
+        write-host $computerListComboBox.selecteditem
+        write-host $path
+        #[System.Windows.MessageBox]::Show()
+        explorer $path
+    }
+    else {
+        [System.Windows.MessageBox]::Show('No user selected.')
+    }
+}
 function isUp{
 
     $online=Test-Connection $computerListComboBox.SelectedValue -Quiet -Count 1
@@ -84,6 +94,26 @@ function FillComputerList{
     $computerListComboBox.SelectedValuePath="name"
 
 }
+
+function creds{
+    $credPath = ".\creds.xml"
+    # check for stored credential
+    if ( Test-Path $credPath ) {
+        #crendetial is stored, load it 
+        $cred = Import-CliXml -Path $credPath
+        $cred
+    } else {
+        # no stored credential: create store, get credential and save it
+        $parent = split-path $credpath -parent
+        if ( -not (test-Path $parent)) {
+            New-Item -ItemType Directory -Force -Path $parent
+        }
+        $cred = get-credential -Message "Please use an account with rights on AD"
+        $cred | Export-CliXml -Path $credPath
+        $cred
+    }
+}
+
 #Library to make the GUI work
 Add-Type -AssemblyName PresentationFramework
 #GUI code
@@ -114,9 +144,10 @@ Add-Type -AssemblyName PresentationFramework
 
                     </ComboBox>
                     <TextBox x:Name="Textbox_RegisterComputer" HorizontalAlignment="Left" Height="83" Margin="0,191,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="768"/>
-                    <Button x:Name="button_OpenExplorer" Content="Open Explorer" HorizontalAlignment="Left" Margin="10,58,0,0" VerticalAlignment="Top" Width="95" Height="42"/>
+                    <Button x:Name="button_OpenExplorer" Content="Open Explorer" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top" Width="95" Height="42"/>
                     <Label x:Name="labelConnectivity" Content="" HorizontalAlignment="Left" Margin="381,31,0,0" VerticalAlignment="Top"/>
-                    <Button x:Name="button_Ping" Content="Ping" HorizontalAlignment="Left" Margin="110,58,0,0" VerticalAlignment="Top" Width="95" Height="42"/>
+                    <Button x:Name="button_Ping" Content="Ping" HorizontalAlignment="Left" Margin="110,88,0,0" VerticalAlignment="Top" Width="95" Height="42"/>
+                    <Label x:Name="labelSelected" HorizontalAlignment="Left" Margin="10,53,0,0" VerticalAlignment="Top" Height="30" Width="142" FontSize="10"/>
 
                 </Grid>
             </TabItem>
@@ -152,7 +183,8 @@ $button_UpdateLists.Add_Click({FillUserList
 #$computerListComboBox.Add_SelectionChanged({isUp})
 #Clean connectiviy status
 $computerListComboBox.Add_SelectionChanged({$labelConnectivity.Background = $Null 
-     $labelConnectivity.Content = ''})
+     $labelConnectivity.Content = ''
+    $labelSelected.Content=$computerListComboBox.SelectedValue})
 
 
 #Show the dialog
