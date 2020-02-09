@@ -1,4 +1,11 @@
 
+function RegisterAction {
+    param($string)
+    $date=get-date -Format '[hh:mm dd:mm:yy]'
+    $Textbox_Register.AppendText([System.Environment]::Newline)
+    $registerString = '{0} {1}' -f $date , $string
+    $Textbox_Register.AppendText($registerString)
+}
 
 function UnlockUser {
 
@@ -7,10 +14,7 @@ function UnlockUser {
      Unlocks the account for the selected user
     .DESCRIPTION
     Uses Unlock-ADAccount to unlock the specified user account that has been blocked after several attempts trying to login.
-    .EXAMPLE
-   UnlockUser
-    .EXAMPLE
-   Another example of how to use this cmdlet #>
+#>
     param ( $userName
     )
     Enable-ADAccount $userListComboBox.selecteditem
@@ -18,9 +22,22 @@ function UnlockUser {
 }
 
 function GetADGroups {
-    $Textbox_Register.Text += 'AD Groups'+ $userListComboBox.selecteditem +'is member of: '
-    $Textbox_Register.Text += (Get-ADPrincipalGroupMembership $userListComboBox.selecteditem).name
+   # $Textbox_Register.Text += 'AD Groups', $userListComboBox.SelectedValue ,' is member of:1&#x0a;'
+    #$Textbox_Register.Text += 'AD Groups for {0} `r`n' -f $userListComboBox.SelectedValue
+    $title='AD Groups for {0}' -f $userListComboBox.SelectedValue
+    RegisterAction  $title
+    #$Textbox_Register.AppendText('AD Groups for {0}' -f $userListComboBox.SelectedValue)
+    #$Textbox_Register.AppendText([System.Environment]::Newline)
+    foreach($group in (Get-ADPrincipalGroupMembership $userListComboBox.selecteditem).name){
+        RegisterAction $group
+        #$Textbox_Register.AppendText([System.Environment]::Newline)
+        #$Textbox_Register.AppendText($group)
+    }
+    #$Textbox_Register.AppendText((Get-ADPrincipalGroupMembership $userListComboBox.selecteditem).name)
+    $Textbox_Register.AppendText([System.Environment]::Newline)
 }
+
+
 function FillList {
     $userListComboBox.ItemsSource = get-aduser -f *
     $userListComboBox.DisplayMemberPath="Name"
@@ -57,6 +74,8 @@ $XAML.SelectNodes("//*[@*[contains(translate(name(.),'n','N'),'Name')]]")  | For
 
 #Filling user list 
 FillList
+$Textbox_Register.IsReadOnly = $true;
+$Textbox_Register.AcceptsReturn = $true;
 #Handling Buttons
 $button_UnlockUser.Add_Click({ UnlockUser})
 $button_GetGroups.Add_Click({ GetADGroups})
