@@ -8,35 +8,44 @@ function RegisterAction {
 }
 
 function UnlockUser {
-
-<#
-    .Synopsis
-     Unlocks the account for the selected user
-    .DESCRIPTION
-    Uses Unlock-ADAccount to unlock the specified user account that has been blocked after several attempts trying to login.
-#>
     param ( $userName
     )
+    if($userListComboBox.selectedindex -ne -1){
     Enable-ADAccount $userListComboBox.selecteditem
-    [System.Windows.MessageBox]::Show('Account has been unlocked '+ $userListComboBox.selecteditem);
+    $outString = 'Account has been unlocked for {0}' -f $userListComboBox.selecteditem
+    RegisterAction $outString
+    }
+    else {
+        [System.Windows.MessageBox]::Show('No user selected.')
+    }
 }
 
 function GetADGroups {
-   # $Textbox_Register.Text += 'AD Groups', $userListComboBox.SelectedValue ,' is member of:1&#x0a;'
-    #$Textbox_Register.Text += 'AD Groups for {0} `r`n' -f $userListComboBox.SelectedValue
-    $title='AD Groups for {0}' -f $userListComboBox.SelectedValue
-    RegisterAction  $title
-    #$Textbox_Register.AppendText('AD Groups for {0}' -f $userListComboBox.SelectedValue)
-    #$Textbox_Register.AppendText([System.Environment]::Newline)
-    foreach($group in (Get-ADPrincipalGroupMembership $userListComboBox.selecteditem).name){
-        RegisterAction $group
-        #$Textbox_Register.AppendText([System.Environment]::Newline)
-        #$Textbox_Register.AppendText($group)
+    if($userListComboBox.selectedindex -ne -1){
+        $title='AD Groups for {0}' -f $userListComboBox.SelectedValue
+        RegisterAction  $title
+        foreach($group in (Get-ADPrincipalGroupMembership $userListComboBox.selecteditem).name){
+            RegisterAction $group
+        }
+        $Textbox_Register.AppendText([System.Environment]::Newline)
     }
-    #$Textbox_Register.AppendText((Get-ADPrincipalGroupMembership $userListComboBox.selecteditem).name)
-    $Textbox_Register.AppendText([System.Environment]::Newline)
+    else {
+        [System.Windows.MessageBox]::Show('No user selected.')
+    }
 }
 
+function ResetPasswordAD {
+    if($userListComboBox.selectedindex -ne -1){
+    Set-ADAccountPassword -Identity $userListComboBox.selecteditem -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Bunge2020" -Force) -PassThru -Confirm:$false
+    Set-ADUser -ChangePasswordAtLogon $true -Identity $userListComboBox.selecteditem -Confirm:$false
+    UnlockUser
+    $outString = 'Password has been reset to default for user {0}' -f $userListComboBox.selecteditem
+    RegisterAction $outString
+    }
+    else {
+        [System.Windows.MessageBox]::Show('No user selected.')
+    }
+    }
 
 function FillList {
     $userListComboBox.ItemsSource = get-aduser -f *
@@ -77,8 +86,10 @@ FillList
 $Textbox_Register.IsReadOnly = $true;
 $Textbox_Register.AcceptsReturn = $true;
 #Handling Buttons
+
 $button_UnlockUser.Add_Click({ UnlockUser})
 $button_GetGroups.Add_Click({ GetADGroups})
+$button_ResetPassword.Add_Click({ResetPasswordAD})
 
 
 
