@@ -31,4 +31,5 @@ RSAT installed or module ActiveDirectory for powershell
 
 * [VSCommunity](https://visualstudio.microsoft.com/es/vs/community/) - Framework to create the GUI in XAML
 * [Powershell](https://docs.microsoft.com/es-es/powershell/) - Main code
+* [VSCode](https://code.visualstudio.com/) - IDE with PS module 
 
