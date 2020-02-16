@@ -16,10 +16,10 @@ A powershell script using a GUI in XAML to work with AD users and computers fast
     - Update the computer and user list
 
 ### Examples
-![Alt text](VirtualBoxVM_9d1R7KQHlA.png?raw=true "Title")
-![Alt text](VirtualBoxVM_K5R5lM9oIq.png?raw=true "Title")
-![Alt text](VirtualBoxVM_bTYDXMG2sc.png?raw=true "Title")
-![Alt text](VirtualBoxVM_u0Rmju5iCB.png?raw=true "Title")
+![Alt text](images/VirtualBoxVM_9d1R7KQHlA.png?raw=true "Title")
+![Alt text](images/VirtualBoxVM_K5R5lM9oIq.png?raw=true "Title")
+![Alt text](images/VirtualBoxVM_bTYDXMG2sc.png?raw=true "Title")
+![Alt text](images/VirtualBoxVM_u0Rmju5iCB.png?raw=true "Title")
 ### Prerequisites
 ```
 Powershell 3.0 or higher
