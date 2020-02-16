@@ -16,11 +16,7 @@ For computers includes:
 Other options:
     -Update the computer and user list
 
-.EXAMPLE
-An example
 
-.NOTES
-General notes
 #>
 
 
