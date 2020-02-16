@@ -23,7 +23,7 @@ A powershell script using a GUI in XAML to work with AD users and computers fast
 ### Prerequisites
 ```
 Powershell 3.0 or higher
-
+RSAT installed or module ActiveDirectory for powershell
 ```
 
 ## Built With
