@@ -1,4 +1,32 @@
-<#  Global variables    #>
+<#
+.SYNOPSIS
+A powershell script using a GUI in XAML to work with AD users and computers faster than RSAT AD tool
+
+.DESCRIPTION
+The computers are listed by description and the selected value is the computer name
+The users are listed by displayname and the selected value is the distinguishedName
+For users includes:
+    - Get groups a user is member of (output in a GridView table)
+    - Unlock a user that has blocked the account
+    - Reset the password of a user, asking for a new password that the user will need to change on next logon
+For computers includes:
+    - Ping the computer
+    - Open remote C:\ drive
+    - Get groups the computer is member of
+Other options:
+    -Update the computer and user list
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
+
+
+<#  Global variables and assemblies   #>
+Add-Type -AssemblyName Microsoft.VisualBasic #Library for inputbox
+Add-Type -AssemblyName PresentationFramework #Library to make the GUI work
 $ou = "OU=ES,DC=EU,DC=DIR,DC=domain,DC=COM"
 $SCCMRemotePath= ""
 $psExecPath= ""
@@ -24,12 +52,37 @@ function creds{
         $cred
     }
 }
+Function Write-Log {
+    [CmdletBinding()]
+    Param(
+    [Parameter(Mandatory=$False)]
+    [ValidateSet("INFO","WARN","ERROR","FATAL","DEBUG")]
+    [String]
+    $Level = "INFO",
+
+    [Parameter(Mandatory=$True)]
+    [string]
+    $Message,
+
+    [Parameter(Mandatory=$False)]
+    [string]
+    $logfile = '.\log.txt'
+    )
+
+    $Stamp = (Get-Date).toString("dd/MM/yyyy HH:mm:ss")
+    $Line = "$Stamp $Level $Message"
+    If($logfile) {
+        Add-Content $logfile -Value $Line
+    }
+    Else {
+        Write-Output $Line
+    }
+}
 #Users
 function UnlockUser {
     if($userListComboBox.selectedindex -ne -1){
-    Enable-ADAccount $userListComboBox.selecteditem -Credential creds
-    $outString = 'Account has been unlocked for {0}' -f $userListComboBox.selecteditem
-    RegisterAction $outString
+    Enable-ADAccount $userListComboBox.selecteditem -Credential (creds)
+    Write-Log -Message ('Account has been unlocked for {0}' -f $userListComboBox.selecteditem)
     }
     else {
         [System.Windows.MessageBox]::Show('No user selected.')
@@ -44,6 +97,7 @@ function GetADGroups {
         }
         $Textbox_Register.AppendText([System.Environment]::Newline)#>
         Get-ADPrincipalGroupMembership $userListComboBox.selecteditem -Credential (creds)| out-gridview -title $userListComboBox.selecteditem
+        Write-Log -Message ("{0} {1}" -f $userListComboBox.selecteditem, ' Get User AD Groups')
     }
     else {
         [System.Windows.MessageBox]::Show('No user selected.')
@@ -51,11 +105,12 @@ function GetADGroups {
 }
 function ResetPasswordAD {
     if($userListComboBox.selectedindex -ne -1){
-    Set-ADAccountPassword -Identity $userListComboBox.selecteditem -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Bunge2020" -Force) -PassThru -Confirm:$false -Credential creds
-    Set-ADUser -ChangePasswordAtLogon $true -Identity $userListComboBox.selecteditem -Confirm:$false -Credential creds
+    $password = [Microsoft.VisualBasic.Interaction]::InputBox("Enter a password", "Password reset")
+
+    Set-ADAccountPassword -Identity $userListComboBox.selecteditem -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $password -Force) -PassThru -Confirm:$false -Credential (creds)
+    Set-ADUser -ChangePasswordAtLogon $true -Identity $userListComboBox.selecteditem -Confirm:$false -Credential (creds)
     UnlockUser
-    $outString = 'Password has been reset to default for user {0}' -f $userListComboBox.selecteditem
-    RegisterAction $outString
+    Write-Log -Message ('Password has been reset to default for user {0}' -f $userListComboBox.selecteditem)
     }
     else {
         [System.Windows.MessageBox]::Show('No user selected.')
@@ -65,13 +120,12 @@ function ResetPasswordAD {
 function FillUserList {
     $userListComboBox.ItemsSource = get-aduser -f * | sort -property Name
     $userListComboBox.DisplayMemberPath="Name"
+    Write-Log -Message ('User List has been filled')
 }
 #Computers
 function OpenExplorer{
     if($computerListComboBox.selectedindex -ne -1){
-        $path = "\\{0}" -f $computerListComboBox.SelectedValue
-        write-host $computerListComboBox.selecteditem
-        write-host $path
+        $path = "\\{0}\c$" -f $computerListComboBox.SelectedValue
         #[System.Windows.MessageBox]::Show()
         explorer $path
     }
@@ -79,11 +133,10 @@ function OpenExplorer{
         [System.Windows.MessageBox]::Show('No computer selected.')
     }
 }
+
 function StartSCCMRemote{
     if($computerListComboBox.selectedindex -ne -1){
         $path = ".\SCCM\CmRc.exe {0}" -f $computerListComboBox.SelectedValue
-        write-host $computerListComboBox.selecteditem
-        write-host $path
         #[System.Windows.MessageBox]::Show()
         explorer $path
     }
@@ -116,13 +169,10 @@ function FillComputerList{
     $computerListComboBox.ItemsSource = get-adcomputer -f * -properties description  |sort -property Description| select description,name 
     $computerListComboBox.DisplayMemberPath="description"
     $computerListComboBox.SelectedValuePath="name"
-
+    Write-Log -Message ('Computer list has been filled')
 }
 
 
-
-#Library to make the GUI work
-Add-Type -AssemblyName PresentationFramework
 #GUI code
 [xml]$XAML = @'
 <Window x:Name="Window"
