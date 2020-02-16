@@ -1,6 +1,7 @@
 # A GUI for Active Directory with PowerShell
 A powershell script using a GUI in XAML to work with AD users and computers faster than RSAT AD tool
 ### Notes
+- Gets all computers and users under the domain the user that ran the script 
 - The computers are listed by description and the selected value is the computer name
 - The users are listed by displayname and the selected value is the distinguishedName
 - For users includes:
