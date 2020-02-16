@@ -20,9 +20,6 @@ A powershell script using a GUI in XAML to work with AD users and computers fast
 ![Alt text](VirtualBoxVM_K5R5lM9oIq.png?raw=true "Title")
 ![Alt text](VirtualBoxVM_bTYDXMG2sc.png?raw=true "Title")
 ![Alt text](VirtualBoxVM_u0Rmju5iCB.png?raw=true "Title")
-
-- Image
-- Image
 ### Prerequisites
 ```
 Powershell 3.0 or higher
